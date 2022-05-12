@@ -6,12 +6,14 @@
 //
 
 import SwiftUI
+import Firebase
 
 @main
 struct MyBCSAppApp: App {
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            LoginView()
         }
     }
 }
