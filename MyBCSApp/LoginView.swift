@@ -8,24 +8,12 @@
 import SwiftUI
 import Firebase
 
-class FirebaseManager : NSObject {
-    let auth: Auth
-    
-    static let shared = FirebaseManager()
-    
-    override init() {
-        FirebaseApp.configure()
-        
-        self.auth = Auth.auth()
-        
-        super.init()
-    }
-}
-
 struct LoginView: View {
     @State var isLoginMode = false
     @State var email = ""
     @State var password = ""
+    @State var hasLoggenIn = false
+    
     
 //    init() {
 //        FirebaseApp.configure()
@@ -68,7 +56,7 @@ struct LoginView: View {
                         handleAction()
                     } label : {
                         HStack {
-                            Spacer()
+                            Spacer()  
                             Text(isLoginMode ? "Log In" : "Create Account")
                                 .foregroundColor(.white)
                                 .padding(.vertical, 10)
@@ -79,6 +67,8 @@ struct LoginView: View {
                     
                     Text(self.loginStatusMessage)
                         .foregroundColor(.red)
+                    
+                    NavigationLink(destination: DashboardView(), isActive: $hasLoggenIn, label: {EmptyView()})
                     
                 }.padding()
                
@@ -109,7 +99,7 @@ struct LoginView: View {
                 return
             }
             print("Successfully logged in as user user: \(result?.user.uid ?? "")")
-            
+            hasLoggenIn = true
             self.loginStatusMessage = "Successfully logged in as user user: \(result?.user.uid ?? "")"
         }
     }
@@ -127,7 +117,23 @@ struct LoginView: View {
             print("Successfully created user: \(result?.user.uid ?? "")")
             
             self.loginStatusMessage = "Successfully created user: \(result?.user.uid ?? "")"
+            
+            storeUserInformation()
         }
+    }
+    
+    private func storeUserInformation() {
+        guard let uid = FirebaseManager.shared.auth.currentUser?.uid else { return }
+        let userdata = ["email": self.email, "uid": uid]
+        FirebaseManager.shared.firestore.collection("users")
+            .document(uid).setData(userdata) {
+                err in
+                if let err = err {
+                    print(err)
+                    self.loginStatusMessage = "\(err)"
+                    return
+                }
+            }
     }
 }
 
