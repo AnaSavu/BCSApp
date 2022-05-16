@@ -7,20 +7,21 @@
 
 import SwiftUI
 
-struct User {
-    let uid, email: String
-}
-
 class DashboardModel: ObservableObject {
     
     @Published var errorMessage = ""
     @Published var user: User?
     
     init() {
+        DispatchQueue.main.async {
+            self.isUserCurrentlyLoggenOut = FirebaseManager.shared.auth
+                .currentUser?.uid == nil 
+        }
+        
         fetchCurrentUser()
     }
     
-    private func fetchCurrentUser() {
+    func fetchCurrentUser() {
         
         guard let uid = FirebaseManager.shared.auth.currentUser?.uid else {
             self.errorMessage = "Could not find firebase uid"
@@ -38,12 +39,17 @@ class DashboardModel: ObservableObject {
                 self.errorMessage = "No data found"
                 return}
             
-            let uid = data["uid"] as? String ?? ""
-            let email = data["email"] as? String ?? ""
-            self.user = User(uid: uid, email: email)
+            self.user = .init(data: data)
             
         }
          
+    }
+    
+    @Published var isUserCurrentlyLoggenOut = false
+    
+    func handleSignOut() {
+        isUserCurrentlyLoggenOut.toggle()
+        try? FirebaseManager.shared.auth.signOut()
     }
 }
 
@@ -102,10 +108,17 @@ struct DashboardView: View {
             .init(title: Text("Settings"), message: Text("What do you want to do?"), buttons: [
                 .destructive(Text("Sign Out"), action: {
                     print("handle sign out")
+                    vm.handleSignOut()
                 }),
 //                        .default(Text("DEFAULT BUTTON")),
                 .cancel()
             ])
+        }
+        .fullScreenCover(isPresented: $vm.isUserCurrentlyLoggenOut, onDismiss: nil) {
+            LoginView(didCompleteLoginProcess: {
+                self.vm.isUserCurrentlyLoggenOut = false
+                self.vm.fetchCurrentUser()
+            })
         }
     }
     

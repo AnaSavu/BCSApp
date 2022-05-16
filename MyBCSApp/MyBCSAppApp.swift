@@ -13,7 +13,7 @@ struct MyBCSAppApp: App {
     
     var body: some Scene {
         WindowGroup {
-            LoginView()
+            LoginView(didCompleteLoginProcess: {})
         }
     }
 }

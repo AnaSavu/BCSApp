@@ -9,10 +9,12 @@ import SwiftUI
 import Firebase
 
 struct LoginView: View {
-    @State var isLoginMode = false
-    @State var email = ""
-    @State var password = ""
-    @State var hasLoggenIn = false
+    let didCompleteLoginProcess: () -> ()
+    
+    @State private var isLoginMode = false
+    @State private var email = ""
+    @State private var password = ""
+    @State private var hasLoggenIn = false
     
     
 //    init() {
@@ -100,7 +102,9 @@ struct LoginView: View {
             }
             print("Successfully logged in as user user: \(result?.user.uid ?? "")")
             hasLoggenIn = true
-            self.loginStatusMessage = "Successfully logged in as user user: \(result?.user.uid ?? "")"
+            self.loginStatusMessage = "Successfully logged in as user: \(result?.user.uid ?? "")"
+            
+            self.didCompleteLoginProcess()
         }
     }
     
@@ -133,12 +137,14 @@ struct LoginView: View {
                     self.loginStatusMessage = "\(err)"
                     return
                 }
+                
+                self.didCompleteLoginProcess()
             }
     }
 }
 
 struct LoginView_Previews: PreviewProvider {
     static var previews: some View {
-        LoginView()
+        LoginView(didCompleteLoginProcess: {})
     }
 }
