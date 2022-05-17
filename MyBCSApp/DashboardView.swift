@@ -15,7 +15,7 @@ class DashboardModel: ObservableObject {
     init() {
         DispatchQueue.main.async {
             self.isUserCurrentlyLoggenOut = FirebaseManager.shared.auth
-                .currentUser?.uid == nil 
+                .currentUser?.uid == nil
         }
         
         fetchCurrentUser()
@@ -42,7 +42,7 @@ class DashboardModel: ObservableObject {
             self.user = .init(data: data)
             
         }
-         
+        
     }
     
     @Published var isUserCurrentlyLoggenOut = false
@@ -54,7 +54,7 @@ class DashboardModel: ObservableObject {
 }
 
 struct BusinessCard: Identifiable {
-    var id: ObjectIdentifier
+    var id: String
     var title: String
     var email: String
     var phoneNumber: String
@@ -63,19 +63,82 @@ struct BusinessCard: Identifiable {
 struct DashboardView: View {
     
     @State var shouldShowLogOutOptions = false
+    @State var shouldShowActionSheet = false
+    @State var showImagePicker = false
+    @State var sourceType: UIImagePickerController.SourceType = .camera
+    @State var businessCards: [BusinessCard] = []
     
     @ObservedObject private var vm = DashboardModel()
     
     var body: some View {
         NavigationView {
             VStack {
-//                Text("CURRENT USER ID: \(vm.user?.uid ?? "") ")
+                //                Text("CURRENT USER ID: \(vm.user?.uid ?? "") ")
                 customNavBar
                 dashboardView
             }
             .overlay(newBusinessCardButton, alignment: .bottom)
             .navigationBarHidden(true)
             
+        }
+    }
+    
+    private var businessCardRow: some View {
+//        var businessCard: BusinessCard
+        VStack {
+            HStack(spacing: 16) {
+                Image(systemName: "lanyardcard")
+                    .font(.system(size: 32))
+                    .rotationEffect(.degrees(270))
+                VStack(alignment: .leading){
+                    Text("businessCard.title")
+                        .font(.system(size: 16, weight: .bold))
+                    Text("businessCard.email")
+                        .font(.system(size: 14))
+                        .foregroundColor(Color.gray)
+                    
+                    Text("businessCard.phoneNumber")
+                        .font(.system(size: 14))
+                }
+                Spacer()
+                
+            }
+            Divider()
+                .padding(.vertical, 8)
+        }.padding(.horizontal)
+    }
+    
+    private var dashboardView: some View {
+        ScrollView {
+//            getDocs()
+            ForEach(0..<10, id: \.self) { num in
+                businessCardRow
+            }.padding(.bottom, 50)
+        }
+    }
+    
+    private func getDocs() {
+        FirebaseManager.shared.firestore.collection("businessCard").whereField("userId", arrayContains: [self.vm.user?.uid]).getDocuments() {
+            (querySnapshot, err) in
+            guard let documents = querySnapshot?.documents else {
+                print("No documents")
+                return
+            }
+            
+            DispatchQueue.main.async {
+                self.businessCards = documents.map {
+                    (QueryDocumentSnapshot) -> BusinessCard in
+                    let data = QueryDocumentSnapshot.data()
+                    
+                    let id = data["id"] as? String ?? ""
+                    let title = data["title"] as? String ?? ""
+                    let email = data["email"] as? String ?? ""
+                    let phoneNumber = data["phoneNumber"] as? String ?? ""
+                    
+                    
+                    return BusinessCard(id: id, title: title, email: email, phoneNumber: phoneNumber)
+                }
+            }
         }
     }
     
@@ -90,10 +153,10 @@ struct DashboardView: View {
             VStack(alignment: .leading) {
                 Text("\(vm.user?.email ?? "")")
                     .font(.system(size: 24, weight: .bold))
-            
+                
                 
             }
-        
+            
             Spacer()
             Button {
                 shouldShowLogOutOptions.toggle()
@@ -110,7 +173,7 @@ struct DashboardView: View {
                     print("handle sign out")
                     vm.handleSignOut()
                 }),
-//                        .default(Text("DEFAULT BUTTON")),
+                //                        .default(Text("DEFAULT BUTTON")),
                 .cancel()
             ])
         }
@@ -122,38 +185,11 @@ struct DashboardView: View {
         }
     }
     
-    private var dashboardView: some View {
-        ScrollView {
-            ForEach(0..<10, id: \.self) { num in
-                VStack {
-                    HStack(spacing: 16) {
-                        Image(systemName: "lanyardcard")
-                            .font(.system(size: 32))
-                            .rotationEffect(.degrees(270))
-                        VStack(alignment: .leading){
-                            Text("Title")
-                                .font(.system(size: 16, weight: .bold))
-                            Text("Email")
-                                .font(.system(size: 14))
-                                .foregroundColor(Color.gray)
-                                
-                            Text("Phone Number")
-                                .font(.system(size: 14))
-                        }
-                        Spacer()
-                        
-                    }
-                    Divider()
-                        .padding(.vertical, 8)
-                }.padding(.horizontal)
-            }.padding(.bottom, 50)
-        }
-    }
-    
     private var newBusinessCardButton: some View {
         Button {
-            
-        } label : {
+            self.shouldShowActionSheet = true
+        }
+        label : {
             HStack {
                 Spacer()
                 Text("+ New Business Card")
@@ -162,18 +198,33 @@ struct DashboardView: View {
             }
             .foregroundColor(.white)
             .padding(.vertical)
-                .background(Color.blue)
-                .cornerRadius(32)
-                .padding(.horizontal)
-                .shadow(radius: 15)
+            .background(Color.blue)
+            .cornerRadius(32)
+            .padding(.horizontal)
+            .shadow(radius: 15)
+            .actionSheet(isPresented: $shouldShowActionSheet) {
+                ActionSheet(title: Text("Select Photo"), message: Text("Choose"), buttons: [
+                    .default(Text("Photo Library")) {
+                        self.showImagePicker = true
+                    },
+                    .default(Text("Camera")) {
+                        self.showImagePicker = true
+                    },
+                    .cancel()
+                ])
+            }
+            
             
         }
+        
     }
+    
+    
 }
 
 struct DashboardView_Previews: PreviewProvider {
     static var previews: some View {
         DashboardView()
-            .preferredColorScheme(.dark)
+        //            .preferredColorScheme(.dark)
     }
 }
