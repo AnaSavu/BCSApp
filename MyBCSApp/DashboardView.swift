@@ -148,32 +148,45 @@ struct DashboardView: View {
         ScrollView {
 //            print("Get documents is executing \(getDocs())")
 //            print(self.businessCards)
-            ForEach(0..<self.businessCards.count) {_ in
-                businessCardRow
-            }.padding(.bottom, 50)
+            VStack {
+            }
+            .onAppear {
+                getDocs()
+                ForEach(0..<self.businessCards.count) {_ in
+                    businessCardRow
+                }.padding(.bottom, 50)
+            }
+            
         }
     }
     
     private func getDocs() {
-        FirebaseManager.shared.firestore.collection("businessCard").whereField("userId", arrayContains: [self.vm.user?.uid]).getDocuments() {
+        FirebaseManager.shared.firestore.collection("businessCard")
+//            .whereField("id", isEqualTo: self.vm.user?.uid)
+            .getDocuments() {
+//            .whereField("userId", arrayContains: [self.vm.user?.uid]).getDocuments()
             (querySnapshot, err) in
             guard let documents = querySnapshot?.documents else {
                 print("No documents")
                 return
             }
-
+            
+            self.businessCards.append(self.b1)
+            
             DispatchQueue.main.async {
-
+                
                 self.businessCards = documents.map {
                     (QueryDocumentSnapshot) -> BusinessCard in
                     let data = QueryDocumentSnapshot.data()
-
+                    print("data")
+                    print(data)
+                    
                     let id = data["id"] as? String ?? ""
                     let title = data["title"] as? String ?? ""
                     let email = data["email"] as? String ?? ""
                     let phoneNumber = data["phoneNumber"] as? String ?? ""
-
-
+                    
+                    
                     return BusinessCard(id: id, title: title, email: email, phoneNumber: phoneNumber)
                 }
             }
