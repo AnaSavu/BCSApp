@@ -62,7 +62,7 @@ struct DashboardView: View {
     @State var sourceType: UIImagePickerController.SourceType = .camera
     
     
-    @State var b1: BusinessCard = BusinessCard(id: "1", title: "t1", email: "a@", phoneNumber: "43")
+//    @State var b1: BusinessCard = BusinessCard(id: "1", title: "t1", email: "a@", phoneNumber: "43")
     @State var businessCards: [BusinessCard] = []
     
     @State private var image: UIImage?
@@ -116,7 +116,7 @@ struct DashboardView: View {
             .overlay(newBusinessCardButton, alignment: .bottom)
             .navigationBarHidden(true)
             
-        }
+        }.navigationBarHidden(true)
     }
     
     private var businessCardRow: some View {
@@ -146,51 +146,68 @@ struct DashboardView: View {
     
     private var dashboardView: some View {
         ScrollView {
-//            print("Get documents is executing \(getDocs())")
-//            print(self.businessCards)
             VStack {
+                ForEach(self.businessCards) {card in
+                    HStack(spacing: 16) {
+                        Image(systemName: "lanyardcard")
+                            .font(.system(size: 32))
+                            .rotationEffect(.degrees(270))
+                        VStack(alignment: .leading){
+                            Text(card.title)
+                                .font(.system(size: 16, weight: .bold))
+                            Text(card.email)
+                                .font(.system(size: 14))
+                                .foregroundColor(Color.gray)
+
+                            Text(card.phoneNumber)
+                                .font(.system(size: 14))
+                        }
+                        Spacer()
+
+                    }
+                    Divider()
+                        .padding(.vertical, 8)
+                }.padding(.bottom, 15)
             }
             .onAppear {
                 getDocs()
-                ForEach(0..<self.businessCards.count) {_ in
-                    businessCardRow
-                }.padding(.bottom, 50)
+                
             }
+            .padding(.horizontal)
             
         }
     }
     
     private func getDocs() {
         FirebaseManager.shared.firestore.collection("businessCard")
-//            .whereField("id", isEqualTo: self.vm.user?.uid)
             .getDocuments() {
-//            .whereField("userId", arrayContains: [self.vm.user?.uid]).getDocuments()
             (querySnapshot, err) in
             guard let documents = querySnapshot?.documents else {
                 print("No documents")
                 return
             }
             
-            self.businessCards.append(self.b1)
-            
             DispatchQueue.main.async {
+                var temporaryBusinessCardsList: [BusinessCard] = []
                 
-                self.businessCards = documents.map {
-                    (QueryDocumentSnapshot) -> BusinessCard in
-                    let data = QueryDocumentSnapshot.data()
-                    print("data")
-                    print(data)
+                for d in documents {
+                    let data = d.data()
                     
                     let id = data["id"] as? String ?? ""
+                    let userId = data["userId"] as? String ?? ""
                     let title = data["title"] as? String ?? ""
                     let email = data["email"] as? String ?? ""
                     let phoneNumber = data["phoneNumber"] as? String ?? ""
                     
-                    
-                    return BusinessCard(id: id, title: title, email: email, phoneNumber: phoneNumber)
+                    if userId == self.vm.user?.uid {
+                        temporaryBusinessCardsList.append(BusinessCard(id: id, userId: userId, title: title, email: email, phoneNumber: phoneNumber))
+                    }
                 }
+                
+                self.businessCards = temporaryBusinessCardsList
+                print("data")
+                print(self.businessCards)
             }
-            print(self.businessCards)
         }
     }
     

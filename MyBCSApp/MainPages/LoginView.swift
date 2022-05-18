@@ -16,11 +16,6 @@ struct LoginView: View {
     @State private var password = ""
     @State private var hasLoggenIn = false
     
-    
-//    init() {
-//        FirebaseApp.configure()
-//    }
-    
     var body: some View {
         NavigationView {
             ScrollView {
@@ -88,7 +83,6 @@ struct LoginView: View {
         }
         else {
             createNewAccount()
-//            print("Register a new account inside of Firebase Auth")
         }
     }
     
