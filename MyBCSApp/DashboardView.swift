@@ -53,27 +53,63 @@ class DashboardModel: ObservableObject {
     }
 }
 
-struct BusinessCard: Identifiable {
-    var id: String
-    var title: String
-    var email: String
-    var phoneNumber: String
-}
-
 struct DashboardView: View {
     
     @State var shouldShowLogOutOptions = false
-    @State var shouldShowActionSheet = false
+    
+    @State var shouldShowCameraScreen = false
     @State var showImagePicker = false
     @State var sourceType: UIImagePickerController.SourceType = .camera
+    
+    
+    @State var b1: BusinessCard = BusinessCard(id: "1", title: "t1", email: "a@", phoneNumber: "43")
     @State var businessCards: [BusinessCard] = []
     
+    @State private var image: UIImage?
+    
     @ObservedObject private var vm = DashboardModel()
+    
+    private var newBusinessCardButton: some View {
+        Button {
+            shouldShowCameraScreen.toggle()
+        }
+        label : {
+            HStack {
+                Spacer()
+                Text("+ New Business Card")
+                    .font(.system(size: 16, weight: .bold))
+                Spacer()
+            }
+            .foregroundColor(.white)
+            .padding(.vertical)
+            .background(Color.blue)
+            .cornerRadius(32)
+            .padding(.horizontal)
+            .shadow(radius: 15)
+            .actionSheet(isPresented: $shouldShowCameraScreen) {
+                ActionSheet(title: Text("Select Photo"), message: Text("Choose"), buttons: [
+                    .default(Text("Photo Library")) {
+                        self.showImagePicker = true
+                        self.sourceType = .photoLibrary
+                    },
+                    .default(Text("Camera")) {
+                        self.showImagePicker = true
+                        self.sourceType = .camera
+                    },
+                    .cancel()
+                ])
+            }
+            
+        }
+        .fullScreenCover(isPresented: $showImagePicker) {
+            ImagePicker(image: self.$image, isShown: self.$showImagePicker, sourceType: self.sourceType)
+        }
+    }
+    
     
     var body: some View {
         NavigationView {
             VStack {
-                //                Text("CURRENT USER ID: \(vm.user?.uid ?? "") ")
                 customNavBar
                 dashboardView
             }
@@ -84,7 +120,7 @@ struct DashboardView: View {
     }
     
     private var businessCardRow: some View {
-//        var businessCard: BusinessCard
+        //        var businessCard: BusinessCard
         VStack {
             HStack(spacing: 16) {
                 Image(systemName: "lanyardcard")
@@ -96,12 +132,12 @@ struct DashboardView: View {
                     Text("businessCard.email")
                         .font(.system(size: 14))
                         .foregroundColor(Color.gray)
-                    
+
                     Text("businessCard.phoneNumber")
                         .font(.system(size: 14))
                 }
                 Spacer()
-                
+
             }
             Divider()
                 .padding(.vertical, 8)
@@ -110,8 +146,9 @@ struct DashboardView: View {
     
     private var dashboardView: some View {
         ScrollView {
-//            getDocs()
-            ForEach(0..<10, id: \.self) { num in
+//            print("Get documents is executing \(getDocs())")
+//            print(self.businessCards)
+            ForEach(0..<self.businessCards.count) {_ in
                 businessCardRow
             }.padding(.bottom, 50)
         }
@@ -124,21 +161,23 @@ struct DashboardView: View {
                 print("No documents")
                 return
             }
-            
+
             DispatchQueue.main.async {
+
                 self.businessCards = documents.map {
                     (QueryDocumentSnapshot) -> BusinessCard in
                     let data = QueryDocumentSnapshot.data()
-                    
+
                     let id = data["id"] as? String ?? ""
                     let title = data["title"] as? String ?? ""
                     let email = data["email"] as? String ?? ""
                     let phoneNumber = data["phoneNumber"] as? String ?? ""
-                    
-                    
+
+
                     return BusinessCard(id: id, title: title, email: email, phoneNumber: phoneNumber)
                 }
             }
+            print(self.businessCards)
         }
     }
     
@@ -184,41 +223,6 @@ struct DashboardView: View {
             })
         }
     }
-    
-    private var newBusinessCardButton: some View {
-        Button {
-            self.shouldShowActionSheet = true
-        }
-        label : {
-            HStack {
-                Spacer()
-                Text("+ New Business Card")
-                    .font(.system(size: 16, weight: .bold))
-                Spacer()
-            }
-            .foregroundColor(.white)
-            .padding(.vertical)
-            .background(Color.blue)
-            .cornerRadius(32)
-            .padding(.horizontal)
-            .shadow(radius: 15)
-            .actionSheet(isPresented: $shouldShowActionSheet) {
-                ActionSheet(title: Text("Select Photo"), message: Text("Choose"), buttons: [
-                    .default(Text("Photo Library")) {
-                        self.showImagePicker = true
-                    },
-                    .default(Text("Camera")) {
-                        self.showImagePicker = true
-                    },
-                    .cancel()
-                ])
-            }
-            
-            
-        }
-        
-    }
-    
     
 }
 
