@@ -67,13 +67,14 @@ struct DashboardView: View {
     
     @State private var image: UIImage?
     
+    @State private var isPhotoSelected: Bool = false
+    
     @ObservedObject private var vm = DashboardModel()
     
     private var newBusinessCardButton: some View {
-        Button {
+        Button(action: {
             shouldShowCameraScreen.toggle()
-        }
-        label : {
+        }, label: {
             HStack {
                 Spacer()
                 Text("+ New Business Card")
@@ -99,19 +100,26 @@ struct DashboardView: View {
                     .cancel()
                 ])
             }
-            
-        }
+        })
+        .frame(maxHeight: 15, alignment: .bottom)
         .fullScreenCover(isPresented: $showImagePicker) {
-            ImagePicker(image: self.$image, isShown: self.$showImagePicker, sourceType: self.sourceType)
+            ImagePicker(image: self.$image, isShown: self.$showImagePicker, isPhotoSelected: self.$isPhotoSelected, sourceType: self.sourceType)
+                .sheet(isPresented: self.$isPhotoSelected){
+                    ContactView(image: self.$image)
+                }
         }
     }
-    
     
     var body: some View {
         NavigationView {
             VStack {
                 customNavBar
                 dashboardView
+            }
+            .onAppear {
+//                removeAllC
+                getDocs()
+                
             }
             .overlay(newBusinessCardButton, alignment: .bottom)
             .navigationBarHidden(true)
@@ -168,10 +176,6 @@ struct DashboardView: View {
                     Divider()
                         .padding(.vertical, 8)
                 }.padding(.bottom, 15)
-            }
-            .onAppear {
-                getDocs()
-                
             }
             .padding(.horizontal)
             
