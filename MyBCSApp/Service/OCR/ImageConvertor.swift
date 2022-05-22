@@ -7,16 +7,18 @@
 
 import Foundation
 import UIKit
+import SwiftUI
 
 class ImageConvertor {
-    let image = UIImage(named: "15.jpeg")?.jpegData(compressionQuality: 1)
-    
+    let image = UIImage(named: "MyPhoto")
+//    @Binding var image: UIImage?
+//
     init(){
+        
     }
     
     func toBase64() -> String {
-        let image_string = self.image?.base64EncodedString()
-        print(image_string ?? "Could not encode image to base64")
-        return image_string ?? ""
+        let encoded_image = image?.jpegData(compressionQuality: 1)?.base64EncodedString()
+        return encoded_image ?? ""
     }
 }

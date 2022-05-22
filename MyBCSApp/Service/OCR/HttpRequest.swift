@@ -13,76 +13,53 @@ struct JsonData: Codable {
 
 class HttpRequest {
     let string_image: String
-    let data = """
-    {
-        "requests": [
-          {
-            "features": [
-              {
-                "maxResults": 50,
-                "type": "OBJECT_LOCALIZATION"
-              },
-              {
-                "maxResults": 50,
-                "type": "LABEL_DETECTION"
-              },
-              {
-                "maxResults": 50,
-                "model": "builtin/latest",
-                "type": "DOCUMENT_TEXT_DETECTION"
-              },
-              {
-                "maxResults": 50,
-                "type": "SAFE_SEARCH_DETECTION"
-              }
-            ],
-            "image": {
-              "content": self.__image
-            },
-            "imageContext": {
-              "cropHintsParams": {
-                "aspectRatios": [
-                  0.8,
-                  1,
-                  1.2
-                ]
-              }
-            }
-          }
-        ]
-    }
-    """
+//    let d1: String
+    
     
     init(string_image: String) {
         self.string_image = string_image
     }
     
     private func getApiKey() -> String {
-        if let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
-            let fileUrl = dir.appendingPathComponent("apikey.txt")
-            
-            do  {
-                let text = try String(contentsOf: fileUrl, encoding: .utf8)
-                return text
-            }
-            catch {
-                print("Error retrieving apikey")
-                return ""
-            }
+        if let path = Bundle.main.path(forResource: "apikey", ofType: "txt")
+        {
+                let fm = FileManager()
+                let exists = fm.fileExists(atPath: path)
+                if(exists){
+                    let content = fm.contents(atPath: path)
+                    let contentAsString = String(data: content!, encoding: String.Encoding.utf8)!
+                    return contentAsString
+                    
+                }
         }
         return ""
     }
     
     func getHttpResponse() {
         let apikey = getApiKey()
-        let url = URL(string: "https://vision.googleapis.com/v1/images:annotate?key=" + apikey)!
+        let newapiKey = apikey.components(separatedBy: .whitespacesAndNewlines).joined()
+        let url = URL(string: "https://vision.googleapis.com/v1/images:annotate?key=\(newapiKey)")!
+        print(url.absoluteString)
         
-        let task = URLSession.shared.dataTask(with: url) {(data, response, error) in
-            guard let data = data else { return }
-            print(String(data: data, encoding: .utf8)!)
-        }
-
-        task.resume()
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+//        let body = self.d1.data(using: .utf8)!
+//        let bodyData = try?  JSONSerialization.data(withJSONObject: body, options: [])
+//        print(bodyData)
+//
+//
+//        let session = URLSession.shared
+//        let task = session.dataTask(with: request) { data, response,error  in
+//
+//            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200, let
+//                    jsonData = data
+//                    else {
+//                print("error")
+//                return
+//            }
+//        }
+//        task.resume()
     }
     
     
