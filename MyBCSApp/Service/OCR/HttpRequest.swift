@@ -6,61 +6,52 @@
 //
 
 import Foundation
-
-struct JsonData: Codable {
-    
-}
+import UIKit
+import SwiftUI
 
 class HttpRequest {
-    let string_image: String
-//    let d1: String
+    @Binding var image: UIImage?
     
-    
-    init(string_image: String) {
-        self.string_image = string_image
+    init(image: Binding<UIImage?>){
+        _image = image
     }
     
-    private func getApiKey() -> String {
-        if let path = Bundle.main.path(forResource: "apikey", ofType: "txt")
-        {
-                let fm = FileManager()
-                let exists = fm.fileExists(atPath: path)
-                if(exists){
-                    let content = fm.contents(atPath: path)
-                    let contentAsString = String(data: content!, encoding: String.Encoding.utf8)!
-                    return contentAsString
-                    
-                }
+    func apiCall() {
+        guard let url = URL(string: "http://192.168.0.124:8000/image") else {
+            print("url was not done correctly")
+            return
         }
-        return ""
-    }
-    
-    func getHttpResponse() {
-        let apikey = getApiKey()
-        let newapiKey = apikey.components(separatedBy: .whitespacesAndNewlines).joined()
-        let url = URL(string: "https://vision.googleapis.com/v1/images:annotate?key=\(newapiKey)")!
-        print(url.absoluteString)
+        print("first here")
+        
+        let im = UIImage(named: "MyPhoto")
+        let imData = im?.jpegData(compressionQuality: 1)
+//        let imData = _image.wrappedValue?.jpegData(compressionQuality: 1)
         
         var request = URLRequest(url: url)
+        print("it got here")
+        
         request.httpMethod = "POST"
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-//        let body = self.d1.data(using: .utf8)!
-//        let bodyData = try?  JSONSerialization.data(withJSONObject: body, options: [])
-//        print(bodyData)
-//
-//
-//        let session = URLSession.shared
-//        let task = session.dataTask(with: request) { data, response,error  in
-//
-//            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200, let
-//                    jsonData = data
-//                    else {
-//                print("error")
-//                return
-//            }
-//        }
-//        task.resume()
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let body: [String: AnyHashable] = [
+            "base64str": imData?.base64EncodedString()
+        ]
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body, options: .fragmentsAllowed)
+        print("\(request.httpBody)")
+        
+        let task = URLSession.shared.dataTask(with: request) {data, _, error in
+            guard let data = data, error == nil else {
+                return
+            }
+            
+            do {
+                let response = try JSONSerialization.jsonObject(with: data, options: .allowFragments)
+                print("SUCCESS: \(response)")
+            }
+            catch {
+                print(error)
+            }
+        }
+        
+        task.resume()
     }
-    
-    
 }
