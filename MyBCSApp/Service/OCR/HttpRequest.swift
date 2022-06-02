@@ -16,19 +16,17 @@ class HttpRequest {
         _image = image
     }
     
-    func apiCall() {
-        guard let url = URL(string: "http://192.168.0.124:8000/image") else {
+    func apiCall(){
+        guard let url = URL(string: "http://192.168.1.8:8000/image") else {
             print("url was not done correctly")
             return
         }
-        print("first here")
         
         let im = UIImage(named: "MyPhoto")
         let imData = im?.jpegData(compressionQuality: 1)
 //        let imData = _image.wrappedValue?.jpegData(compressionQuality: 1)
         
         var request = URLRequest(url: url)
-        print("it got here")
         
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -36,7 +34,6 @@ class HttpRequest {
             "base64str": imData?.base64EncodedString()
         ]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body, options: .fragmentsAllowed)
-        print("\(request.httpBody)")
         
         let task = URLSession.shared.dataTask(with: request) {data, _, error in
             guard let data = data, error == nil else {
@@ -44,14 +41,13 @@ class HttpRequest {
             }
             
             do {
-                let response = try JSONSerialization.jsonObject(with: data, options: .allowFragments)
+                let response: NSString = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as! NSString
                 print("SUCCESS: \(response)")
             }
             catch {
                 print(error)
             }
         }
-        
         task.resume()
     }
 }
