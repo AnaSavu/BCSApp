@@ -16,18 +16,18 @@ struct ContactView: View {
         _image = image
 //        let stringim = ImageConvertor().toBase64()
 //        HttpRequest(string_image: stringim).getHttpResponse()
-        HttpRequest(image: self.$image).apiCall()
+        var stringRes = HttpRequest(image: self.$image).apiCall()
         
-//        var dictonary:NSDictionary?
-//
-//        if let data = response.data(using: String.Encoding.utf8.rawValue) {
-//            do {
-//                dictonary = try JSONSerialization.jsonObject(with: data, options: []) as? [String:AnyObject] as NSDictionary?
-//                print(dictonary)
-//            } catch let error as NSError {
-//                print(error)
-//            }
-//        }
+        var dictonary:NSDictionary?
+
+        if let data = stringRes.data(using: String.Encoding.utf8) {
+            do {
+                dictonary = try JSONSerialization.jsonObject(with: data, options: []) as? [String:AnyObject] as NSDictionary?
+                print(dictonary)
+            } catch let error as NSError {
+                print(error)
+            }
+        }
 
     }
     
