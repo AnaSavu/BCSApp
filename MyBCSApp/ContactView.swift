@@ -11,23 +11,20 @@ import Contacts
 struct ContactView: View {
     @Binding var image: UIImage?
     @State var i1 = UIImage(named:"15.jpeg")
+    var dictionary: Dictionary<String, AnyObject>?
   
     init(image: Binding<UIImage?>) {
         _image = image
-//        let stringim = ImageConvertor().toBase64()
-//        HttpRequest(string_image: stringim).getHttpResponse()
         var stringRes = HttpRequest(image: self.$image).apiCall()
         
-        var dictonary:NSDictionary?
-
-        if let data = stringRes.data(using: String.Encoding.utf8) {
+        if let data = stringRes.data(using: .utf8) {
             do {
-                dictonary = try JSONSerialization.jsonObject(with: data, options: []) as? [String:AnyObject] as NSDictionary?
-                print(dictonary)
+                dictionary = try JSONSerialization.jsonObject(with: data, options: []) as? [String:AnyObject]
             } catch let error as NSError {
                 print(error)
             }
         }
+        print(dictionary)
 
     }
     
@@ -39,9 +36,17 @@ struct ContactView: View {
         Button("+ Add to Contacts") {
             let contact = CNMutableContact()
             // Name
-            contact.givenName = "Ming"
+            contact.givenName = dictionary?["PERSON"] as! String
             // Phone No.
-            contact.phoneNumbers = [CNLabeledValue(label: CNLabelPhoneNumberiPhone, value: CNPhoneNumber(stringValue: "12345678"))]
+            contact.phoneNumbers = [CNLabeledValue(label: CNLabelPhoneNumberiPhone, value: CNPhoneNumber(stringValue: dictionary?["PHONE_NUMBER"] as! String))]
+            //Organization
+            contact.organizationName = dictionary?["ORGANIZATION"] as! String
+            //email
+            
+            // postal address.
+            
+            
+            
             let store = CNContactStore()
             let saveRequest = CNSaveRequest()
             saveRequest.add(contact, toContainerWithIdentifier: nil)

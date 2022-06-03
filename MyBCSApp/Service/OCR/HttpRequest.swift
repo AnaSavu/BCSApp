@@ -55,6 +55,7 @@ class HttpRequest {
         }
         task.resume()
         sem.wait()
+        print(res)
         return res
     }
 }
