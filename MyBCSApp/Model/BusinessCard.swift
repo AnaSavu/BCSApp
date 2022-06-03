@@ -13,5 +13,6 @@ struct BusinessCard: Identifiable {
     var title: String
     var email: String
     var phoneNumber: String
+    var organization: String
 }
 

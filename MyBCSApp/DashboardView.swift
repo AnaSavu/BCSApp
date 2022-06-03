@@ -169,6 +169,10 @@ struct DashboardView: View {
 
                             Text(card.phoneNumber)
                                 .font(.system(size: 14))
+                            
+                            Text(card.organization)
+                                .font(.system(size: 14))
+                                .foregroundColor(Color.gray)
                         }
                         Spacer()
 
@@ -203,8 +207,10 @@ struct DashboardView: View {
                     let email = data["email"] as? String ?? ""
                     let phoneNumber = data["phoneNumber"] as? String ?? ""
                     
+                    let organization = data["organization"] as? String ?? ""
+                    
                     if userId == self.vm.user?.uid {
-                        temporaryBusinessCardsList.append(BusinessCard(id: id, userId: userId, title: title, email: email, phoneNumber: phoneNumber))
+                        temporaryBusinessCardsList.append(BusinessCard(id: id, userId: userId, title: title, email: email, phoneNumber: phoneNumber, organization: organization))
                     }
                 }
                 
