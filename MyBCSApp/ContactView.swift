@@ -56,10 +56,14 @@ struct ContactView: View {
                 print("Error occur: \(error)")
             }
             
+            //current user
+            guard let currentUserId = FirebaseManager.shared.auth.currentUser?.uid else {
+                print("Could not find firebase uid")
+                return}
             //save to db
             let identifier = UUID()
             FirebaseManager.shared.firestore.collection("businessCard").document(identifier.uuidString).setData(["title": "secn",
-                                                                                                   "email" : "2@cdf.com", "organization" : "cds", "phoneNumber" : "5432235643", "userId" : "rc804aPw1iVcgDdjIdIXO7cheom1",
+                                                                                                                 "email" : "2@cdf.com", "organization" : "cds", "phoneNumber" : "5432235643", "userId" : currentUserId ,
                                                                                                                  "id":identifier.uuidString
                                                                                                   ]) {
                 err in
