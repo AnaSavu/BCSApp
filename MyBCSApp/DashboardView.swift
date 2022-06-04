@@ -102,7 +102,7 @@ struct DashboardView: View {
             }
         })
         .frame(maxHeight: 15, alignment: .bottom)
-        .fullScreenCover(isPresented: $showImagePicker) {
+        .fullScreenCover(isPresented: $showImagePicker, onDismiss: nil) {
             ImagePicker(image: self.$image, isShown: self.$showImagePicker, isPhotoSelected: self.$isPhotoSelected, sourceType: self.sourceType)
                 .sheet(isPresented: self.$isPhotoSelected){
                     ContactView(image: self.$image)
@@ -176,6 +176,15 @@ struct DashboardView: View {
                         }
                         Spacer()
 
+                        Button {
+                            self.deleteCard(cardId: card.id)
+                            
+                        } label: {
+                            Image(systemName: "minus")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(Color(.label))
+                        }
+
                     }
                     Divider()
                         .padding(.vertical, 8)
@@ -183,6 +192,16 @@ struct DashboardView: View {
             }
             .padding(.horizontal)
             
+        }
+    }
+    
+    private func deleteCard(cardId: String) {
+        FirebaseManager.shared.firestore.collection("businessCard").document(cardId).delete() { err in
+            if let err = err {
+                print("Error removing document: \(err)")
+            } else {
+                print("Document \(cardId) successfully removed!")
+            }
         }
     }
     

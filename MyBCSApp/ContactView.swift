@@ -33,6 +33,12 @@ struct ContactView: View {
             .resizable()
             .frame(width: 300, height: 300)
         
+        VStack {
+            Text(dictionary?["PERSON"] as! String)
+            Text(dictionary?["PHONE_NUMBER"] as! String)
+            Text(dictionary?["ORGANIZATION"] as! String)
+        }
+        
         Button("+ Add to Contacts") {
             let contact = CNMutableContact()
             // Name
@@ -79,9 +85,3 @@ struct ContactView: View {
     
     }
 }
-
-//struct ContactView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        ContactView(image: UIImage)
-//    }
-//}

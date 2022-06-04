@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FirebaseStorage
 
 class ImagePickerCoordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
     @Binding var image: UIImage?
@@ -25,6 +26,29 @@ class ImagePickerCoordinator: NSObject, UINavigationControllerDelegate, UIImageP
             image = uiImage
             isShown = false
             isPhotoSelected = true
+            
+            
+            let ref = FirebaseManager.shared.storage.reference(withPath: "image.jpeg")
+            let metadata = StorageMetadata()
+            metadata.contentType = "image/jpeg"
+            
+            guard let imageData = image?.jpegData(compressionQuality: 1) else {return}
+            ref.putData(imageData, metadata: metadata) {
+                metadata, err in
+                if let err = err {
+                    print("Failed to push image to storage: \(err)")
+                    return
+                }
+                
+                ref.downloadURL {url, err in
+                    if let err = err {
+                        print("Failed to retrieve downloadURL: \(err)")
+                        return
+                    }
+                    
+                    print("Successfully stored image woth url: \(url?.absoluteString ?? "")")
+                }
+            }
         }
     }
     
