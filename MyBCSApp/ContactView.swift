@@ -92,8 +92,12 @@ struct ContactView: View {
                 return}
             //save to db
             let identifier = UUID()
-            FirebaseManager.shared.firestore.collection("businessCard").document(identifier.uuidString).setData(["title": "secn",
-                                                                                                                 "email" : "2@cdf.com", "organization" : "cds", "phoneNumber" : "5432235643", "userId" : currentUserId ,
+            FirebaseManager.shared.firestore.collection("businessCard").document(identifier.uuidString).setData(["person": dictionary?["OTHER"] as! String,
+                                                                                                                 "organization" : dictionary?["ORGANIZATION"] as! String,
+                                                                                                                 "phoneNumber" : dictionary?["PHONE_NUMBER"] as! String,
+                                                                                                                 "address" : dictionary?["ADDRESS"] as! String,
+                                                                                                                 "email" : dictionary?["EMAIL"] as! String,
+                                                                                                                 "userId" : currentUserId ,
                                                                                                                  "id":identifier.uuidString
                                                                                                   ]) {
                 err in

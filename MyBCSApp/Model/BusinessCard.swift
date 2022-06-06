@@ -10,9 +10,10 @@ import Foundation
 struct BusinessCard: Identifiable {
     var id: String
     var userId: String
-    var title: String
-    var email: String
-    var phoneNumber: String
+    var person: String
     var organization: String
+    var phoneNumber: String
+    var address: String
+    var email: String   
 }
 

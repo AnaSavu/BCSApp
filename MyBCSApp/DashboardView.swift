@@ -66,6 +66,7 @@ struct DashboardView: View {
     @State var businessCards: [BusinessCard] = []
     
     @State private var image: UIImage?
+    @State private var presentAlert = false
     
     @State private var isPhotoSelected: Bool = false
     
@@ -127,31 +128,6 @@ struct DashboardView: View {
         }.navigationBarHidden(true)
     }
     
-    private var businessCardRow: some View {
-        //        var businessCard: BusinessCard
-        VStack {
-            HStack(spacing: 16) {
-                Image(systemName: "lanyardcard")
-                    .font(.system(size: 32))
-                    .rotationEffect(.degrees(270))
-                VStack(alignment: .leading){
-                    Text("businessCard.title")
-                        .font(.system(size: 16, weight: .bold))
-                    Text("businessCard.email")
-                        .font(.system(size: 14))
-                        .foregroundColor(Color.gray)
-
-                    Text("businessCard.phoneNumber")
-                        .font(.system(size: 14))
-                }
-                Spacer()
-
-            }
-            Divider()
-                .padding(.vertical, 8)
-        }.padding(.horizontal)
-    }
-    
     private var dashboardView: some View {
         ScrollView {
             VStack {
@@ -161,18 +137,39 @@ struct DashboardView: View {
                             .font(.system(size: 32))
                             .rotationEffect(.degrees(270))
                         VStack(alignment: .leading){
-                            Text(card.title)
+                            HStack {
+                                Text("Person")
+                                Spacer()
+                                Text(card.person)
                                 .font(.system(size: 16, weight: .bold))
-                            Text(card.email)
-                                .font(.system(size: 14))
-                                .foregroundColor(Color.gray)
-
-                            Text(card.phoneNumber)
-                                .font(.system(size: 14))
-                            
-                            Text(card.organization)
-                                .font(.system(size: 14))
-                                .foregroundColor(Color.gray)
+                            }
+                            HStack{
+                                Text("Organization")
+                                Spacer()
+                                Text(card.organization)
+                                    .font(.system(size: 14))
+                                    .foregroundColor(Color.gray)
+                            }
+                            HStack{
+                                Text("Phone Number")
+                                Spacer()
+                                Text(card.phoneNumber)
+                                    .font(.system(size: 14))
+                            }
+                            HStack {
+                                Text("Address")
+                                Spacer()
+                                Text(card.address)
+                                    .font(.system(size: 14))
+                            }
+                            HStack {
+                                Text("Email")
+                                Spacer()
+                                Text(card.email)
+                                    .font(.system(size: 14))
+                                    .foregroundColor(Color.gray)
+                            }
+                           
                         }
                         Spacer()
 
@@ -183,6 +180,9 @@ struct DashboardView: View {
                             Image(systemName: "minus")
                                 .font(.system(size: 24, weight: .bold))
                                 .foregroundColor(Color(.label))
+                        }
+                        .alert(isPresented: $presentAlert) {
+                            Alert(title: Text("Business card was successfully removed!"))
                         }
 
                     }
@@ -201,6 +201,7 @@ struct DashboardView: View {
                 print("Error removing document: \(err)")
             } else {
                 print("Document \(cardId) successfully removed!")
+                presentAlert = true
             }
         }
     }
@@ -222,14 +223,17 @@ struct DashboardView: View {
                     
                     let id = data["id"] as? String ?? ""
                     let userId = data["userId"] as? String ?? ""
-                    let title = data["title"] as? String ?? ""
-                    let email = data["email"] as? String ?? ""
-                    let phoneNumber = data["phoneNumber"] as? String ?? ""
-                    
+                    let person = data["person"] as? String ?? ""
                     let organization = data["organization"] as? String ?? ""
+                    let phoneNumber = data["phoneNumber"] as? String ?? ""
+                    let address = data["address"] as? String ?? ""
+                    let email = data["email"] as? String ?? ""
+                    
+                    
+                    
                     
                     if userId == self.vm.user?.uid {
-                        temporaryBusinessCardsList.append(BusinessCard(id: id, userId: userId, title: title, email: email, phoneNumber: phoneNumber, organization: organization))
+                        temporaryBusinessCardsList.append(BusinessCard(id: id, userId: userId, person: person, organization: organization,  phoneNumber: phoneNumber, address: address, email: email))
                     }
                 }
                 
