@@ -12,6 +12,7 @@ struct ContactView: View {
     @Binding var image: UIImage?
     @State var i1 = UIImage(named:"15.jpeg")
     var dictionary: Dictionary<String, AnyObject>?
+    @State private var presentAlert = false
   
     init(image: Binding<UIImage?>) {
         _image = image
@@ -80,6 +81,7 @@ struct ContactView: View {
             saveRequest.add(contact, toContainerWithIdentifier: nil)
             do {
                 try store.execute(saveRequest)
+                presentAlert = true
             } catch {
                 print("Error occur: \(error)")
             }
@@ -101,6 +103,9 @@ struct ContactView: View {
                         print("Document successfully written!")
                     }
             }
+        }
+        .alert(isPresented: $presentAlert) {
+            Alert(title: Text("Contact was created"))
         }
         .buttonStyle(.borderedProminent)
         .tint(.black)
