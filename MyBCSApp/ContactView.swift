@@ -31,12 +31,31 @@ struct ContactView: View {
     var body: some View {
         Image(uiImage: _image.wrappedValue ?? UIImage(named: "placeholder")!)
             .resizable()
-            .frame(width: 300, height: 300)
+            .frame(width: 250, height: 400)
         
-        VStack {
-            Text(dictionary?["PERSON"] as! String)
-            Text(dictionary?["PHONE_NUMBER"] as! String)
-            Text(dictionary?["ORGANIZATION"] as! String)
+        Form {
+            HStack{
+                Text("Person:")
+                Text(dictionary?["OTHER"] as! String)
+            }
+            HStack{
+                Text("Organization:")
+                Text(dictionary?["ORGANIZATION"] as! String)
+            }
+            
+            HStack{
+                Text("Phone Number:")
+                Text(dictionary?["PHONE_NUMBER"] as! String)
+            }
+            
+            HStack{
+                Text("Address:")
+                Text(dictionary?["ADDRESS"] as! String)
+            }
+            HStack{
+                Text("Email:")
+                Text(dictionary?["EMAIL"] as! String)
+            }
         }
         
         Button("+ Add to Contacts") {
@@ -48,7 +67,7 @@ struct ContactView: View {
             //Organization
             contact.organizationName = dictionary?["ORGANIZATION"] as! String
             //email
-            
+            contact.emailAddresses = [CNLabeledValue(label: CNLabelWork, value: dictionary?["EMAIL"] as! String as NSString)]
             // postal address.
             
             
