@@ -61,7 +61,7 @@ struct ContactView: View {
         Button("+ Add to Contacts") {
             let contact = CNMutableContact()
             // Name
-            contact.givenName = dictionary?["PERSON"] as! String
+            contact.givenName = dictionary?["OTHER"] as! String
             // Phone No.
             contact.phoneNumbers = [CNLabeledValue(label: CNLabelPhoneNumberiPhone, value: CNPhoneNumber(stringValue: dictionary?["PHONE_NUMBER"] as! String))]
             //Organization
@@ -69,6 +69,9 @@ struct ContactView: View {
             //email
             contact.emailAddresses = [CNLabeledValue(label: CNLabelWork, value: dictionary?["EMAIL"] as! String as NSString)]
             // postal address.
+            let address = CNMutablePostalAddress()
+            address.street = dictionary?["ADDRESS"] as! String
+            contact.postalAddresses = [CNLabeledValue<CNPostalAddress>(label: CNLabelWork, value: address)]
             
             
             
