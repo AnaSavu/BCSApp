@@ -23,11 +23,11 @@ class DashboardModel: ObservableObject {
     
     func fetchCurrentUser() {
         
-        guard let uid = FirebaseManager.shared.auth.currentUser?.uid else {
+        guard let userId = FirebaseManager.shared.auth.currentUser?.uid else {
             self.errorMessage = "Could not find firebase uid"
             return}
         
-        FirebaseManager.shared.firestore.collection("users").document(uid).getDocument {snapshot, error in
+        FirebaseManager.shared.firestore.collection("users").document(userId).getDocument {snapshot, error in
             
             if let error = error {
                 self.errorMessage = "Failed fetching current user: \(error)"
@@ -60,9 +60,6 @@ struct DashboardView: View {
     @State var shouldShowCameraScreen = false
     @State var showImagePicker = false
     @State var sourceType: UIImagePickerController.SourceType = .camera
-    
-    
-//    @State var b1: BusinessCard = BusinessCard(id: "1", title: "t1", email: "a@", phoneNumber: "43")
     @State var businessCards: [BusinessCard] = []
     
     @State private var image: UIImage?
@@ -70,7 +67,7 @@ struct DashboardView: View {
     
     @State private var isPhotoSelected: Bool = false
     
-    @ObservedObject private var vm = DashboardModel()
+    @ObservedObject private var dashboardModel = DashboardModel()
     
     private var newBusinessCardButton: some View {
         Button(action: {
@@ -118,9 +115,7 @@ struct DashboardView: View {
                 dashboardView
             }
             .onAppear {
-//                removeAllC
-                getDocs()
-                
+                getBusinessCards()
             }
             .overlay(newBusinessCardButton, alignment: .bottom)
             .navigationBarHidden(true)
@@ -174,7 +169,7 @@ struct DashboardView: View {
                         Spacer()
 
                         Button {
-                            self.deleteCard(cardId: card.id)
+                            self.deleteBusinessCardFromStorage(cardId: card.id)
                             
                         } label: {
                             Image(systemName: "minus")
@@ -195,10 +190,10 @@ struct DashboardView: View {
         }
     }
     
-    private func deleteCard(cardId: String) {
-        FirebaseManager.shared.firestore.collection("businessCard").document(cardId).delete() { err in
-            if let err = err {
-                print("Error removing document: \(err)")
+    private func deleteBusinessCardFromStorage(cardId: String) {
+        FirebaseManager.shared.firestore.collection("businessCard").document(cardId).delete() { error in
+            if let error = error {
+                print("Error removing document: \(error)")
             } else {
                 print("Document \(cardId) successfully removed!")
                 presentAlert = true
@@ -206,20 +201,20 @@ struct DashboardView: View {
         }
     }
     
-    private func getDocs() {
+    private func getBusinessCards() {
         FirebaseManager.shared.firestore.collection("businessCard")
             .getDocuments() {
-            (querySnapshot, err) in
+            (querySnapshot, error) in
             guard let documents = querySnapshot?.documents else {
-                print("No documents")
+                print("No businessCards")
                 return
             }
             
             DispatchQueue.main.async {
                 var temporaryBusinessCardsList: [BusinessCard] = []
                 
-                for d in documents {
-                    let data = d.data()
+                for document in documents {
+                    let data = document.data()
                     
                     let id = data["id"] as? String ?? ""
                     let userId = data["userId"] as? String ?? ""
@@ -232,7 +227,7 @@ struct DashboardView: View {
                     
                     
                     
-                    if userId == self.vm.user?.uid {
+                    if userId == self.dashboardModel.user?.uid {
                         temporaryBusinessCardsList.append(BusinessCard(id: id, userId: userId, person: person, organization: organization,  phoneNumber: phoneNumber, address: address, email: email))
                     }
                 }
@@ -253,7 +248,7 @@ struct DashboardView: View {
                     .stroke(Color(.label), lineWidth: 1)
                 )
             VStack(alignment: .leading) {
-                Text("\(vm.user?.email ?? "")")
+                Text("\(dashboardModel.user?.email ?? "")")
                     .font(.system(size: 24, weight: .bold))
                 
                 
@@ -273,16 +268,15 @@ struct DashboardView: View {
             .init(title: Text("Settings"), message: Text("What do you want to do?"), buttons: [
                 .destructive(Text("Sign Out"), action: {
                     print("handle sign out")
-                    vm.handleSignOut()
+                    dashboardModel.handleSignOut()
                 }),
-                //                        .default(Text("DEFAULT BUTTON")),
                 .cancel()
             ])
         }
-        .fullScreenCover(isPresented: $vm.isUserCurrentlyLoggenOut, onDismiss: nil) {
+        .fullScreenCover(isPresented: $dashboardModel.isUserCurrentlyLoggenOut, onDismiss: nil) {
             LoginView(didCompleteLoginProcess: {
-                self.vm.isUserCurrentlyLoggenOut = false
-                self.vm.fetchCurrentUser()
+                self.dashboardModel.isUserCurrentlyLoggenOut = false
+                self.dashboardModel.fetchCurrentUser()
             })
         }
     }
@@ -292,6 +286,5 @@ struct DashboardView: View {
 struct DashboardView_Previews: PreviewProvider {
     static var previews: some View {
         DashboardView()
-        //            .preferredColorScheme(.dark)
     }
 }
