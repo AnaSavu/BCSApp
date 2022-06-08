@@ -28,25 +28,26 @@ class ImagePickerCoordinator: NSObject, UINavigationControllerDelegate, UIImageP
             isPhotoSelected = true
             
             
-            let ref = FirebaseManager.shared.storage.reference(withPath: "image.jpeg")
+            let imageReference = FirebaseManager.shared.storage.reference(withPath: "image.jpeg")
             let metadata = StorageMetadata()
             metadata.contentType = "image/jpeg"
-            
+
             guard let imageData = image?.jpegData(compressionQuality: 1) else {return}
-            ref.putData(imageData, metadata: metadata) {
-                metadata, err in
-                if let err = err {
-                    print("Failed to push image to storage: \(err)")
+            imageReference.putData(imageData, metadata: metadata) {
+                metadata, error in
+                if let error = error {
+                    print("Failed to push image to storage: \(error)")
                     return
                 }
-                
-                ref.downloadURL {url, err in
-                    if let err = err {
-                        print("Failed to retrieve downloadURL: \(err)")
+                print("Successfully pushed image to storage")
+
+                imageReference.downloadURL {url, error in
+                    if let error = error {
+                        print("Failed to retrieve downloadURL: \(error)")
                         return
                     }
-                    
-                    print("Successfully stored image woth url: \(url?.absoluteString ?? "")")
+
+                    print("Successfully stored image with url: \(url?.absoluteString ?? "")")
                 }
             }
         }
@@ -74,8 +75,8 @@ struct ImagePicker: UIViewControllerRepresentable {
     }
     
     func makeCoordinator() -> ImagePicker.Coordinator {
-        let im = ImagePickerCoordinator(image: $image, isShown: $isShown, isPhotoSelected: $isPhotoSelected)
-        return im
+        let image = ImagePickerCoordinator(image: $image, isShown: $isShown, isPhotoSelected: $isPhotoSelected)
+        return image
     }
     
     func makeUIViewController(context: UIViewControllerRepresentableContext<ImagePicker>) -> UIImagePickerController {
