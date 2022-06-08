@@ -10,14 +10,14 @@ import Contacts
 
 struct ContactView: View {
     @Binding var image: UIImage?
-    var dictionary: Dictionary<String, AnyObject>?
+    var businessCardData: Dictionary<String, AnyObject>?
     @State private var presentAlert = false
     
     init(image: Binding<UIImage?>) {
         _image = image
-        var stringRes = HttpRequest().getDataFromServer()
+        var serverResponse = HttpRequest().getDataFromServer()
         
-        dictionary = convertStringIntoDictionary(stringData: stringRes)
+        businessCardData = convertStringIntoDictionary(stringData: serverResponse)
         
     }
     
@@ -37,16 +37,16 @@ struct ContactView: View {
     func createContactWithData() {
         let contact = CNMutableContact()
         // Name
-        contact.givenName = dictionary?["PERSON"] as! String
+        contact.givenName = businessCardData?["PERSON"] as! String
         // Phone No.
-        contact.phoneNumbers = [CNLabeledValue(label: CNLabelPhoneNumberiPhone, value: CNPhoneNumber(stringValue: dictionary?["PHONE_NUMBER"] as! String))]
+        contact.phoneNumbers = [CNLabeledValue(label: CNLabelPhoneNumberiPhone, value: CNPhoneNumber(stringValue: businessCardData?["PHONE_NUMBER"] as! String))]
         //Organization
-        contact.organizationName = dictionary?["ORGANIZATION"] as! String
+        contact.organizationName = businessCardData?["ORGANIZATION"] as! String
         //email
-        contact.emailAddresses = [CNLabeledValue(label: CNLabelWork, value: dictionary?["EMAIL"] as! String as NSString)]
+        contact.emailAddresses = [CNLabeledValue(label: CNLabelWork, value: businessCardData?["EMAIL"] as! String as NSString)]
         // postal address.
         let address = CNMutablePostalAddress()
-        address.street = dictionary?["ADDRESS"] as! String
+        address.street = businessCardData?["ADDRESS"] as! String
         contact.postalAddresses = [CNLabeledValue<CNPostalAddress>(label: CNLabelWork, value: address)]
         
         let store = CNContactStore()
@@ -67,17 +67,17 @@ struct ContactView: View {
             return}
         //save to db
         let identifier = UUID()
-        FirebaseManager.shared.firestore.collection("businessCard").document(identifier.uuidString).setData(["person": dictionary?["OTHER"] as! String,
-                                                                                                             "organization" : dictionary?["ORGANIZATION"] as! String,
-                                                                                                             "phoneNumber" : dictionary?["PHONE_NUMBER"] as! String,
-                                                                                                             "address" : dictionary?["ADDRESS"] as! String,
-                                                                                                             "email" : dictionary?["EMAIL"] as! String,
+        FirebaseManager.shared.firestore.collection("businessCard").document(identifier.uuidString).setData(["person": businessCardData?["OTHER"] as! String,
+                                                                                                             "organization" : businessCardData?["ORGANIZATION"] as! String,
+                                                                                                             "phoneNumber" : businessCardData?["PHONE_NUMBER"] as! String,
+                                                                                                             "address" : businessCardData?["ADDRESS"] as! String,
+                                                                                                             "email" : businessCardData?["EMAIL"] as! String,
                                                                                                              "userId" : currentUserId ,
                                                                                                              "id":identifier.uuidString
                                                                                                             ]) {
-            err in
-            if let err = err {
-                print("Error writing document: \(err)")
+            error in
+            if let error = error {
+                print("Error writing document: \(error)")
             } else {
                 print("Document successfully written!")
             }
@@ -92,25 +92,25 @@ struct ContactView: View {
         Form {
             HStack{
                 Text("Person:")
-                Text(dictionary?["PERSON"] as! String)
+                Text(businessCardData?["PERSON"] as! String)
             }
             HStack{
                 Text("Organization:")
-                Text(dictionary?["ORGANIZATION"] as! String)
+                Text(businessCardData?["ORGANIZATION"] as! String)
             }
             
             HStack{
                 Text("Phone Number:")
-                Text(dictionary?["PHONE_NUMBER"] as! String)
+                Text(businessCardData?["PHONE_NUMBER"] as! String)
             }
             
             HStack{
                 Text("Address:")
-                Text(dictionary?["ADDRESS"] as! String)
+                Text(businessCardData?["ADDRESS"] as! String)
             }
             HStack{
                 Text("Email:")
-                Text(dictionary?["EMAIL"] as! String)
+                Text(businessCardData?["EMAIL"] as! String)
             }
         }
         
