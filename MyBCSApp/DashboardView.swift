@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FirebaseStorage
 
 class DashboardModel: ObservableObject {
     
@@ -61,6 +62,7 @@ struct DashboardView: View {
     @State var showImagePicker = false
     @State var sourceType: UIImagePickerController.SourceType = .camera
     @State var businessCards: [BusinessCard] = []
+    @State var serverResponse: String?
     
     @State private var image: UIImage?
     @State private var presentAlert = false
@@ -107,6 +109,11 @@ struct DashboardView: View {
                 }
         }
     }
+   
+    func showLoadingView() -> some View {
+        LoadingView()
+    }
+
     
     var body: some View {
         NavigationView {
@@ -164,10 +171,10 @@ struct DashboardView: View {
                                     .font(.system(size: 14))
                                     .foregroundColor(Color.gray)
                             }
-                           
+                            
                         }
                         Spacer()
-
+                        
                         Button {
                             self.deleteBusinessCardFromStorage(cardId: card.id)
                             
@@ -179,7 +186,7 @@ struct DashboardView: View {
                         .alert(isPresented: $presentAlert) {
                             Alert(title: Text("Business card was successfully removed!"))
                         }
-
+                        
                     }
                     Divider()
                         .padding(.vertical, 8)
@@ -204,39 +211,39 @@ struct DashboardView: View {
     private func getBusinessCards() {
         FirebaseManager.shared.firestore.collection("businessCard")
             .getDocuments() {
-            (querySnapshot, error) in
-            guard let documents = querySnapshot?.documents else {
-                print("No businessCards")
-                return
-            }
-            
-            DispatchQueue.main.async {
-                var temporaryBusinessCardsList: [BusinessCard] = []
-                
-                for document in documents {
-                    let data = document.data()
-                    
-                    let id = data["id"] as? String ?? ""
-                    let userId = data["userId"] as? String ?? ""
-                    let person = data["person"] as? String ?? ""
-                    let organization = data["organization"] as? String ?? ""
-                    let phoneNumber = data["phoneNumber"] as? String ?? ""
-                    let address = data["address"] as? String ?? ""
-                    let email = data["email"] as? String ?? ""
-                    
-                    
-                    
-                    
-                    if userId == self.dashboardModel.user?.uid {
-                        temporaryBusinessCardsList.append(BusinessCard(id: id, userId: userId, person: person, organization: organization,  phoneNumber: phoneNumber, address: address, email: email))
-                    }
+                (querySnapshot, error) in
+                guard let documents = querySnapshot?.documents else {
+                    print("No businessCards")
+                    return
                 }
                 
-                self.businessCards = temporaryBusinessCardsList
-                print("data")
-                print(self.businessCards)
+                DispatchQueue.main.async {
+                    var temporaryBusinessCardsList: [BusinessCard] = []
+                    
+                    for document in documents {
+                        let data = document.data()
+                        
+                        let id = data["id"] as? String ?? ""
+                        let userId = data["userId"] as? String ?? ""
+                        let person = data["person"] as? String ?? ""
+                        let organization = data["organization"] as? String ?? ""
+                        let phoneNumber = data["phoneNumber"] as? String ?? ""
+                        let address = data["address"] as? String ?? ""
+                        let email = data["email"] as? String ?? ""
+                        
+                        
+                        
+                        
+                        if userId == self.dashboardModel.user?.uid {
+                            temporaryBusinessCardsList.append(BusinessCard(id: id, userId: userId, person: person, organization: organization,  phoneNumber: phoneNumber, address: address, email: email))
+                        }
+                    }
+                    
+                    self.businessCards = temporaryBusinessCardsList
+                    //                print("data")
+                    //                print(self.businessCards)
+                }
             }
-        }
     }
     
     private var customNavBar: some View {

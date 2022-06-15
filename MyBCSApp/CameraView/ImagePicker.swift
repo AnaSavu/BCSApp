@@ -25,31 +25,41 @@ class ImagePickerCoordinator: NSObject, UINavigationControllerDelegate, UIImageP
         {
             image = uiImage
             isShown = false
-            isPhotoSelected = true
             
             
-            let imageReference = FirebaseManager.shared.storage.reference(withPath: "image.jpeg")
-            let metadata = StorageMetadata()
-            metadata.contentType = "image/jpeg"
-
-            guard let imageData = image?.jpegData(compressionQuality: 1) else {return}
-            imageReference.putData(imageData, metadata: metadata) {
-                metadata, error in
-                if let error = error {
-                    print("Failed to push image to storage: \(error)")
-                    return
-                }
-                print("Successfully pushed image to storage")
-
-                imageReference.downloadURL {url, error in
-                    if let error = error {
-                        print("Failed to retrieve downloadURL: \(error)")
-                        return
-                    }
-
-                    print("Successfully stored image with url: \(url?.absoluteString ?? "")")
+            let group = DispatchGroup()
+        
+            group.enter()
+            DispatchQueue.main.async {
+                self.uploadImageToStorage {
+                    (str) in
+                    print("gothere")
+                    self.isPhotoSelected = true
+                    group.leave()
                 }
             }
+            
+            group.notify(queue: .main) {
+                self.isPhotoSelected = true
+            }
+        }
+    }
+    
+    func uploadImageToStorage(completion: @escaping((String?) -> ())) {
+        let imageReference = FirebaseManager.shared.storage.reference(withPath: "image.jpeg")
+        let metadata = StorageMetadata()
+        metadata.contentType = "image/jpeg"
+        
+        guard let imageData = image?.jpegData(compressionQuality: 1) else {return}
+        imageReference.putData(imageData, metadata: metadata) {
+            metadata, error in
+            if let error = error {
+                print("Failed to push image to storage: \(error)")
+                completion(nil)
+                return
+            }
+            print("Successfully pushed image to storage")
+            completion("Successfully pushed image to storage")
         }
     }
     
