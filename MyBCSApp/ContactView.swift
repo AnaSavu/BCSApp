@@ -71,17 +71,18 @@ struct ContactView: View {
         let contact = CNMutableContact()
         // Name
 //        if self.contactModel.hasDataModified == true {
-            contact.givenName = self.contactModel.businessCardData?["OTHER"] as! String
-            
-            contact.organizationName = self.contactModel.businessCardData?["ORGANIZATION"] as! String
-            
-            contact.phoneNumbers = [CNLabeledValue(label: CNLabelPhoneNumberiPhone, value: CNPhoneNumber(stringValue: self.contactModel.businessCardData?["PHONE_NUMBER"] as! String))]
-            
-            contact.emailAddresses = [CNLabeledValue(label: CNLabelWork, value: self.contactModel.businessCardData?["EMAIL"] as! String as NSString)]
-            
-            let address = CNMutablePostalAddress()
-            address.street = self.contactModel.businessCardData?["ADDRESS"] as! String
-            contact.postalAddresses = [CNLabeledValue<CNPostalAddress>(label: CNLabelWork, value: address)]
+        contact.givenName = self.contactModel.businessCardData?["OTHER"] as! String
+        
+        if self.contactModel.businessCardData?["ORGANIZATION"] != nil {
+            contact.organizationName = self.contactModel.businessCardData?["ORGANIZATION"] as! String}
+        
+        contact.phoneNumbers = [CNLabeledValue(label: CNLabelPhoneNumberiPhone, value: CNPhoneNumber(stringValue: self.contactModel.businessCardData?["PHONE_NUMBER"] as! String))]
+        
+        contact.emailAddresses = [CNLabeledValue(label: CNLabelWork, value: self.contactModel.businessCardData?["EMAIL"] as! String as NSString)]
+        
+        let address = CNMutablePostalAddress()
+        address.street = self.contactModel.businessCardData?["ADDRESS"] as! String
+        contact.postalAddresses = [CNLabeledValue<CNPostalAddress>(label: CNLabelWork, value: address)]
 //        }
 //        else
 //        {
@@ -113,6 +114,9 @@ struct ContactView: View {
             return}
         //save to db
         let identifier = UUID()
+        if self.contactModel.businessCardData?["ORGANIZATION"] == nil {
+            self.contactModel.businessCardData?["ORGANIZATION"] = "unknown" as AnyObject}
+        
         FirebaseManager.shared.firestore.collection("businessCard").document(identifier.uuidString).setData(["person": self.contactModel.businessCardData?["OTHER"] as! String,
                                                                                                              "organization" : self.contactModel.businessCardData?["ORGANIZATION"] as! String,
                                                                                                              "phoneNumber" : self.contactModel.businessCardData?["PHONE_NUMBER"] as! String,
