@@ -23,8 +23,10 @@ class ContactModel: ObservableObject {
             request.downloadImageFromStorage {
                 (str) in
                 var serverResponse = request.getDataFromServer()
+                print(serverResponse)
                 print("ended with request")
-                self.businessCardData = self.convertStringIntoDictionary(stringData: serverResponse)!
+                var serverDict = self.convertStringIntoDictionary(stringData: serverResponse)!
+                self.businessCardData = self.compareAndAddNecessaryFields(data: serverDict)
                 group.leave()
                 
             }
@@ -32,6 +34,37 @@ class ContactModel: ObservableObject {
         group.notify(queue: .main) {
             self.hasDataModified = true
         }
+        
+    }
+    
+    func compareAndAddNecessaryFields(data: [String:String]) -> [String: String] {
+        var d = data
+        let keyEx = data["OTHER"] != nil
+        if keyEx == false {
+            d["OTHER"] = "unknown"
+        }
+        
+        let k1 = data["ORGANIZATION"] != nil
+        if k1 == false {
+            d["ORGANIZATION"] = "unknown"
+        }
+        
+        let k2 = data["PHONE_NUMBER"] != nil
+        if k2 == false {
+            d["PHONE_NUMBER"] = "unknown"
+        }
+        
+        let k3 = data["ADDRESS"] != nil
+        if k3 == false {
+            d["ADDRESS"] = "unknown"
+        }
+        
+        let k4 = data["EMAIL"] != nil
+        if k4 == false {
+            d["EMAIL"] = "unknown"
+        }
+        
+        return d
         
     }
     
@@ -75,7 +108,7 @@ struct ContactView: View {
         //        if self.contactModel.hasDataModified == true {
         contact.givenName = self.contactModel.businessCardData["OTHER"]!
         
-        if self.contactModel.businessCardData["ORGANIZATION"] != nil {
+        if self.contactModel.businessCardData["ORGANIZATION"] != "unknown" {
             contact.organizationName = self.contactModel.businessCardData["ORGANIZATION"]! }
         
         contact.phoneNumbers = [CNLabeledValue(label: CNLabelPhoneNumberiPhone, value: CNPhoneNumber(stringValue: self.contactModel.businessCardData["PHONE_NUMBER"]! ))]
@@ -104,8 +137,6 @@ struct ContactView: View {
             return}
         //save to db
         let identifier = UUID()
-        if self.contactModel.businessCardData["ORGANIZATION"] == nil {
-            self.contactModel.businessCardData["ORGANIZATION"] = "unknown" as AnyObject as? String}
         
         FirebaseManager.shared.firestore.collection("businessCard").document(identifier.uuidString).setData(["person": self.contactModel.businessCardData["OTHER"]!,
                                                                                                              "organization" : self.contactModel.businessCardData["ORGANIZATION"] ,
