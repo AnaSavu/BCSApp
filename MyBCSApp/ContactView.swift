@@ -9,11 +9,12 @@ import SwiftUI
 import Contacts
 
 class ContactModel: ObservableObject {
-    @Published var businessCardData: Dictionary<String, AnyObject>?
+    @Published var businessCardData: [String:String] = [:]
     @Published var hasDataModified = false
     
     
     init() {
+        self.businessCardData = ["OTHER": "unknown", "ORGANIZATION": "unkown", "PHONE_NUMBER": "unknown", "ADDRESS": "unknown", "EMAIL": "unknown"]
         let group = DispatchGroup()
         group.enter()
         DispatchQueue.main.async(flags: .barrier) {
@@ -23,36 +24,35 @@ class ContactModel: ObservableObject {
                 (str) in
                 var serverResponse = request.getDataFromServer()
                 print("ended with request")
-                self.businessCardData = self.convertStringIntoDictionary(stringData: serverResponse)
+                self.businessCardData = self.convertStringIntoDictionary(stringData: serverResponse)!
                 group.leave()
-              
+                
             }
         }
         group.notify(queue: .main) {
             self.hasDataModified = true
         }
-    
+        
     }
     
-    func convertStringIntoDictionary(stringData: String)  -> Dictionary<String, AnyObject>{
-        var convertedDataIntoDictionary: Dictionary<String, AnyObject>?
+    func convertStringIntoDictionary(stringData: String)  -> [String:String]? {
         if let data = stringData.data(using: .utf8) {
             do {
-                convertedDataIntoDictionary = try JSONSerialization.jsonObject(with: data, options: []) as? [String:AnyObject]
+                return try JSONSerialization.jsonObject(with: data, options: []) as? [String:String]
             } catch let error as NSError {
                 print(error)
             }
         }
-        print("dictionary")
-        print(convertedDataIntoDictionary)
-        return convertedDataIntoDictionary!
+        return nil
     }
 }
 
 struct ContactView: View {
+    @Environment(\.dismiss) private var dismiss
     @Binding var image: UIImage?
-//    var businessCardData: Dictionary<String, AnyObject>?
+
     @State private var presentAlert = false
+    @State private var shouldShowDashboardView = false
     var hasModelChanged = false
     @ObservedObject var contactModel = ContactModel()
     var person = "ana"
@@ -61,6 +61,7 @@ struct ContactView: View {
     var organization = "vd"
     var email = "cd@d"
     var data: String?
+
     
     init(image: Binding<UIImage?>) {
         _image = image
@@ -71,31 +72,19 @@ struct ContactView: View {
     func createContactWithData() {
         let contact = CNMutableContact()
         // Name
-//        if self.contactModel.hasDataModified == true {
-        contact.givenName = self.contactModel.businessCardData?["OTHER"] as! String
+        //        if self.contactModel.hasDataModified == true {
+        contact.givenName = self.contactModel.businessCardData["OTHER"]!
         
-        if self.contactModel.businessCardData?["ORGANIZATION"] != nil {
-            contact.organizationName = self.contactModel.businessCardData?["ORGANIZATION"] as! String}
+        if self.contactModel.businessCardData["ORGANIZATION"] != nil {
+            contact.organizationName = self.contactModel.businessCardData["ORGANIZATION"]! }
         
-        contact.phoneNumbers = [CNLabeledValue(label: CNLabelPhoneNumberiPhone, value: CNPhoneNumber(stringValue: self.contactModel.businessCardData?["PHONE_NUMBER"] as! String))]
+        contact.phoneNumbers = [CNLabeledValue(label: CNLabelPhoneNumberiPhone, value: CNPhoneNumber(stringValue: self.contactModel.businessCardData["PHONE_NUMBER"]! ))]
         
-        contact.emailAddresses = [CNLabeledValue(label: CNLabelWork, value: self.contactModel.businessCardData?["EMAIL"] as! String as NSString)]
+        contact.emailAddresses = [CNLabeledValue(label: CNLabelWork, value: self.contactModel.businessCardData["EMAIL"] as! NSString)]
         
         let address = CNMutablePostalAddress()
-        address.street = self.contactModel.businessCardData?["ADDRESS"] as! String
+        address.street = self.contactModel.businessCardData["ADDRESS"]!
         contact.postalAddresses = [CNLabeledValue<CNPostalAddress>(label: CNLabelWork, value: address)]
-//        }
-//        else
-//        {
-//            contact.givenName = self.person
-//            contact.phoneNumbers = [CNLabeledValue(label: CNLabelPhoneNumberiPhone, value: CNPhoneNumber(stringValue: self.phone_number))]
-//            contact.organizationName = self.organization
-//            contact.emailAddresses = [CNLabeledValue(label: CNLabelWork, value: self.email as NSString)]
-//
-//            let address = CNMutablePostalAddress()
-//            address.street = self.address
-//            contact.postalAddresses = [CNLabeledValue<CNPostalAddress>(label: CNLabelWork, value: address)]
-//        }
         
         let store = CNContactStore()
         let saveRequest = CNSaveRequest()
@@ -115,14 +104,14 @@ struct ContactView: View {
             return}
         //save to db
         let identifier = UUID()
-        if self.contactModel.businessCardData?["ORGANIZATION"] == nil {
-            self.contactModel.businessCardData?["ORGANIZATION"] = "unknown" as AnyObject}
+        if self.contactModel.businessCardData["ORGANIZATION"] == nil {
+            self.contactModel.businessCardData["ORGANIZATION"] = "unknown" as AnyObject as? String}
         
-        FirebaseManager.shared.firestore.collection("businessCard").document(identifier.uuidString).setData(["person": self.contactModel.businessCardData?["OTHER"] as! String,
-                                                                                                             "organization" : self.contactModel.businessCardData?["ORGANIZATION"] as! String,
-                                                                                                             "phoneNumber" : self.contactModel.businessCardData?["PHONE_NUMBER"] as! String,
-                                                                                                             "address" : self.contactModel.businessCardData?["ADDRESS"] as! String,
-                                                                                                             "email" : self.contactModel.businessCardData?["EMAIL"] as! String,
+        FirebaseManager.shared.firestore.collection("businessCard").document(identifier.uuidString).setData(["person": self.contactModel.businessCardData["OTHER"]!,
+                                                                                                             "organization" : self.contactModel.businessCardData["ORGANIZATION"] ,
+                                                                                                             "phoneNumber" : self.contactModel.businessCardData["PHONE_NUMBER"] ,
+                                                                                                             "address" : self.contactModel.businessCardData["ADDRESS"] ,
+                                                                                                             "email" : self.contactModel.businessCardData["EMAIL"] ,
                                                                                                              "userId" : currentUserId ,
                                                                                                              "id":identifier.uuidString
                                                                                                             ]) {
@@ -141,28 +130,27 @@ struct ContactView: View {
             .frame(width: 250, height: 400)
         
         Form {
-//            saveCardInformation()
             HStack{
                 Text("Person:")
-                Text(self.person)
+                Text(self.contactModel.businessCardData["OTHER"]!)
             }
             HStack{
                 Text("Organization:")
-                Text(self.organization)
+                Text(self.contactModel.businessCardData["ORGANIZATION"]!)
             }
             
             HStack{
                 Text("Phone Number:")
-                Text(self.phone_number)
+                Text(self.contactModel.businessCardData["PHONE_NUMBER"]!)
             }
             
             HStack{
                 Text("Address:")
-                Text(self.address)
+                Text(self.contactModel.businessCardData["ADDRESS"]!)
             }
             HStack{
                 Text("Email:")
-                Text(self.email)
+                Text(self.contactModel.businessCardData["EMAIL"]!)
             }
         }
         
@@ -171,7 +159,7 @@ struct ContactView: View {
             saveBusinessCardToFirestore()
         }
         .alert(isPresented: $presentAlert) {
-            Alert(title: Text("Contact was created"))
+            Alert(title: Text("Contact was created"), primaryButton: .default(Text("OK")) {dismiss()}, secondaryButton: .cancel())
         }
         .buttonStyle(.borderedProminent)
         .tint(.black)
