@@ -27,14 +27,14 @@ struct LoginView: View {
                         Text("Create Account")
                             .tag(false)
                     }.pickerStyle(SegmentedPickerStyle())
-                        
+                    
                     if !isLoginMode {
                         Button {
                             
                         } label : {
                             Image(systemName: "person.fill")
-                            .font(.system(size: 34))
-                            .padding()
+                                .font(.system(size: 34))
+                                .padding()
                         }
                     }
                     
@@ -42,9 +42,9 @@ struct LoginView: View {
                         TextField("Email", text: $email)
                             .keyboardType(.emailAddress)
                             .autocapitalization(.none)
-                
+                        
                         SecureField("Password", text: $password)
-                           
+                        
                     }.padding(12)
                     
                     
@@ -53,7 +53,7 @@ struct LoginView: View {
                         handleAction()
                     } label : {
                         HStack {
-                            Spacer()  
+                            Spacer()
                             Text(isLoginMode ? "Log In" : "Create Account")
                                 .foregroundColor(.white)
                                 .padding(.vertical, 10)
@@ -68,7 +68,7 @@ struct LoginView: View {
                     NavigationLink(destination: DashboardView(), isActive: $hasLoggenIn, label: {EmptyView()})
                     
                 }.padding()
-               
+                
                 
             }
             .navigationTitle(isLoginMode ? "Log In" : "Create Account")

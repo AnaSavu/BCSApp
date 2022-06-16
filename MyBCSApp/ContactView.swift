@@ -12,19 +12,24 @@ class ContactModel: ObservableObject {
     @Published var businessCardData: Dictionary<String, AnyObject>?
     @Published var hasDataModified = false
     
+    
     init() {
         let group = DispatchGroup()
-    
-        DispatchQueue.main.async {
+        group.enter()
+        DispatchQueue.main.async(flags: .barrier) {
+            
             let request = HttpRequest()
             request.downloadImageFromStorage {
                 (str) in
-                print(str)
                 var serverResponse = request.getDataFromServer()
                 print("ended with request")
                 self.businessCardData = self.convertStringIntoDictionary(stringData: serverResponse)
+                group.leave()
               
             }
+        }
+        group.notify(queue: .main) {
+            self.hasDataModified = true
         }
     
     }
@@ -41,10 +46,6 @@ class ContactModel: ObservableObject {
         print("dictionary")
         print(convertedDataIntoDictionary)
         return convertedDataIntoDictionary!
-    }
-    
-    func getBusinessCardData() ->Dictionary<String, AnyObject> {
-        return self.businessCardData!
     }
 }
 

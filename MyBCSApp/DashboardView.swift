@@ -8,72 +8,37 @@
 import SwiftUI
 import FirebaseStorage
 
-class DashboardModel: ObservableObject {
-    
-    @Published var errorMessage = ""
-    @Published var user: User?
-    
-    init() {
-        DispatchQueue.main.async {
-            self.isUserCurrentlyLoggenOut = FirebaseManager.shared.auth
-                .currentUser?.uid == nil
-        }
-        
-        fetchCurrentUser()
-    }
-    
-    func fetchCurrentUser() {
-        
-        guard let userId = FirebaseManager.shared.auth.currentUser?.uid else {
-            self.errorMessage = "Could not find firebase uid"
-            return}
-        
-        FirebaseManager.shared.firestore.collection("users").document(userId).getDocument {snapshot, error in
-            
-            if let error = error {
-                self.errorMessage = "Failed fetching current user: \(error)"
-                print("Failed fetching current user: ", error)
-                return
-            }
-            
-            guard let data = snapshot?.data() else {
-                self.errorMessage = "No data found"
-                return}
-            
-            self.user = .init(data: data)
-            
-        }
-        
-    }
-    
-    @Published var isUserCurrentlyLoggenOut = false
-    
-    func handleSignOut() {
-        isUserCurrentlyLoggenOut.toggle()
-        try? FirebaseManager.shared.auth.signOut()
-    }
-}
+
 
 struct DashboardView: View {
     
+    //for sign out
     @State var shouldShowLogOutOptions = false
     
-    @State var shouldShowCameraScreen = false
-    @State var showImagePicker = false
+    
+    //for image picker
+    @State var shouldShowImagePickerActionSheet = false
+    @State var shouldShowImagePicker = false
     @State var sourceType: UIImagePickerController.SourceType = .camera
-    @State var businessCards: [BusinessCard] = []
+    @State private var image: UIImage?
+    @State private var isPhotoSelected: Bool = false
+ 
     @State var serverResponse: String?
     
-    @State private var image: UIImage?
+    
     @State private var presentAlert = false
     
-    @State private var isPhotoSelected: Bool = false
+    
     
     @ObservedObject private var dashboardModel = DashboardModel()
     
+   
+    @State var businessCards: [BusinessCard] = []
+//    @ObservedObject var businessCardsModel = BusinessCardsModel(user: DashboardModel().user)
+    
     private var newBusinessCardButton: some View {
         Button(action: {
-            shouldShowCameraScreen.toggle()
+            shouldShowImagePickerActionSheet.toggle()
         }, label: {
             HStack {
                 Spacer()
@@ -87,14 +52,14 @@ struct DashboardView: View {
             .cornerRadius(32)
             .padding(.horizontal)
             .shadow(radius: 15)
-            .actionSheet(isPresented: $shouldShowCameraScreen) {
+            .actionSheet(isPresented: $shouldShowImagePickerActionSheet) {
                 ActionSheet(title: Text("Select Photo"), message: Text("Choose"), buttons: [
                     .default(Text("Photo Library")) {
-                        self.showImagePicker = true
+                        shouldShowImagePicker.toggle()
                         self.sourceType = .photoLibrary
                     },
                     .default(Text("Camera")) {
-                        self.showImagePicker = true
+                        shouldShowImagePicker.toggle()
                         self.sourceType = .camera
                     },
                     .cancel()
@@ -102,19 +67,19 @@ struct DashboardView: View {
             }
         })
         .frame(maxHeight: 15, alignment: .bottom)
-        .fullScreenCover(isPresented: $showImagePicker, onDismiss: nil) {
-            ImagePicker(image: self.$image, isShown: self.$showImagePicker, isPhotoSelected: self.$isPhotoSelected, sourceType: self.sourceType)
-                .sheet(isPresented: self.$isPhotoSelected){
-                    ContactView(image: self.$image)
-                }
+        .fullScreenCover(isPresented: $shouldShowImagePicker, onDismiss: nil) {
+            VStack {
+                ImagePicker(image: self.$image, isPhotoSelected: self.$isPhotoSelected, sourceType: self.sourceType)
+                    .fullScreenCover(isPresented: self.$isPhotoSelected) {
+                        ContactView(image: self.$image)
+                     }
+                
+            }
+            
         }
-    }
-   
-    func showLoadingView() -> some View {
-        LoadingView()
+        
     }
 
-    
     var body: some View {
         NavigationView {
             VStack {
@@ -143,7 +108,7 @@ struct DashboardView: View {
                                 Text("Person")
                                 Spacer()
                                 Text(card.person)
-                                .font(.system(size: 16, weight: .bold))
+                                    .font(.system(size: 16, weight: .bold))
                             }
                             HStack{
                                 Text("Organization")
