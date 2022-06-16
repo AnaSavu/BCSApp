@@ -156,6 +156,11 @@ struct ContactView: View {
     }
     
     var body: some View {
+        HStack {
+            Button("Cancel") {
+                dismiss()
+            }
+        }
         Image(uiImage: _image.wrappedValue ?? UIImage(named: "placeholder")!)
             .resizable()
             .frame(width: 250, height: 400)
