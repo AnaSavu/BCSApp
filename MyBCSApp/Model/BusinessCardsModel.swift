@@ -10,28 +10,24 @@ import Foundation
 class BusinessCardsModel: ObservableObject {
     @Published var businessCards = [BusinessCard]()
     
-    let user: User?
+    let uid: String
     
-    init(user: User?) {
-        print("user \(user?.uid)")
-        self.user = user
+    init(uid: String) {
+        self.uid = uid
         getBusinessCards()
     }
     
     func getBusinessCards() {
-        print("Items are fetched")
         FirebaseManager.shared.firestore.collection("businessCard")
-            .getDocuments() {
+            .addSnapshotListener {
                 (querySnapshot, error) in
-                guard let documents = querySnapshot?.documents else {
-                    print("No businessCards")
+                if let error = error {
+                    print("Failed to listed to database")
                     return
                 }
-
                 DispatchQueue.main.async {
-                    
-                    for document in documents {
-                        let data = document.data()
+                    querySnapshot?.documentChanges.forEach({change in
+                        let data = change.document.data()
                         
                         let id = data["id"] as? String ?? ""
                         let userId = data["userId"] as? String ?? ""
@@ -41,15 +37,22 @@ class BusinessCardsModel: ObservableObject {
                         let address = data["address"] as? String ?? ""
                         let email = data["email"] as? String ?? ""
                         
-                        if userId == self.user?.uid {
-                            self.businessCards.append(
-                                .init(id: id, userId: userId, person: person, organization: organization, phoneNumber: phoneNumber, address: address, email: email))
+                        if change.type == .added {
+                            
+    
+                            if userId == self.uid {
+                               self.businessCards.append(
+                                   .init(id: id, userId: userId, person: person, organization: organization, phoneNumber: phoneNumber, address: address, email: email))
+                           }
                         }
-                    }
+                        
+                        if change.type == .removed {
+                            let removed_pos = self.businessCards.firstIndex(where: {$0.userId == self.uid})
+                            self.businessCards.remove(at: removed_pos!)
+                        }
+                    })
                     
                 }
             }
-        
-        print(self.businessCards)
     }
 }
