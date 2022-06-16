@@ -40,6 +40,7 @@ class ImagePickerCoordinator: NSObject, UINavigationControllerDelegate, UIImageP
     }
     
     func uploadImageToStorage(completion: @escaping((String?) -> ())) {
+        print("It began the uploading process")
         let imageReference = FirebaseManager.shared.storage.reference(withPath: "image.jpeg")
         let metadata = StorageMetadata()
         metadata.contentType = "image/jpeg"
