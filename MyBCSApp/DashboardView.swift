@@ -22,19 +22,18 @@ struct DashboardView: View {
     @State var sourceType: UIImagePickerController.SourceType = .camera
     @State private var image: UIImage?
     @State private var isPhotoSelected: Bool = false
- 
-    @State var serverResponse: String?
-    
     
     @State private var presentAlert = false
     
+    @ObservedObject private var dashboardModel: DashboardModel
+    @ObservedObject var businessCardsModel: BusinessCardsModel
     
+    @Environment(\.dismiss) private var dismiss
     
-    @ObservedObject private var dashboardModel = DashboardModel()
-    
-   
-    @State var businessCards: [BusinessCard] = []
-//    @ObservedObject var businessCardsModel = BusinessCardsModel(user: DashboardModel().user)
+    init() {
+        self.dashboardModel = DashboardModel()
+        self.businessCardsModel = .init()
+    }
     
     private var newBusinessCardButton: some View {
         Button(action: {
@@ -67,19 +66,20 @@ struct DashboardView: View {
             }
         })
         .frame(maxHeight: 15, alignment: .bottom)
-        .fullScreenCover(isPresented: $shouldShowImagePicker, onDismiss: nil) {
+        .fullScreenCover(isPresented: $shouldShowImagePicker) {
             VStack {
                 ImagePicker(image: self.$image, isPhotoSelected: self.$isPhotoSelected, sourceType: self.sourceType)
                     .fullScreenCover(isPresented: self.$isPhotoSelected) {
                         ContactView(image: self.$image)
-                     }
+                    }
+                
                 
             }
             
         }
         
     }
-
+    
     var body: some View {
         NavigationView {
             VStack {
@@ -87,7 +87,6 @@ struct DashboardView: View {
                 dashboardView
             }
             .onAppear {
-                getBusinessCards()
             }
             .overlay(newBusinessCardButton, alignment: .bottom)
             .navigationBarHidden(true)
@@ -98,7 +97,7 @@ struct DashboardView: View {
     private var dashboardView: some View {
         ScrollView {
             VStack {
-                ForEach(self.businessCards) {card in
+                ForEach(self.businessCardsModel.businessCards) {card in
                     HStack(spacing: 16) {
                         Image(systemName: "lanyardcard")
                             .font(.system(size: 32))
@@ -173,44 +172,6 @@ struct DashboardView: View {
         }
     }
     
-    private func getBusinessCards() {
-        FirebaseManager.shared.firestore.collection("businessCard")
-            .getDocuments() {
-                (querySnapshot, error) in
-                guard let documents = querySnapshot?.documents else {
-                    print("No businessCards")
-                    return
-                }
-                
-                DispatchQueue.main.async {
-                    var temporaryBusinessCardsList: [BusinessCard] = []
-                    
-                    for document in documents {
-                        let data = document.data()
-                        
-                        let id = data["id"] as? String ?? ""
-                        let userId = data["userId"] as? String ?? ""
-                        let person = data["person"] as? String ?? ""
-                        let organization = data["organization"] as? String ?? ""
-                        let phoneNumber = data["phoneNumber"] as? String ?? ""
-                        let address = data["address"] as? String ?? ""
-                        let email = data["email"] as? String ?? ""
-                        
-                        
-                        
-                        
-                        if userId == self.dashboardModel.user?.uid {
-                            temporaryBusinessCardsList.append(BusinessCard(id: id, userId: userId, person: person, organization: organization,  phoneNumber: phoneNumber, address: address, email: email))
-                        }
-                    }
-                    
-                    self.businessCards = temporaryBusinessCardsList
-                    //                print("data")
-                    //                print(self.businessCards)
-                }
-            }
-    }
-    
     private var customNavBar: some View {
         HStack {
             Image(systemName: "person.fill")
@@ -227,13 +188,26 @@ struct DashboardView: View {
             }
             
             Spacer()
+//            NavigationLink(destination: LoginView(didCompleteLoginProcess: {
+//                self.dashboardModel.isUserCurrentlyLoggenOut = false
+//                self.dashboardModel.fetchCurrentUser()}),
+//                           isActive: $dashboardModel.isUserCurrentlyLoggenOut,
+//                           label: {Button {
+//                                shouldShowLogOutOptions.toggle()
+//                            } label: {
+//                                Image(systemName: "gear")
+//                                    .font(.system(size: 24, weight: .bold))
+//                                    .foregroundColor(Color(.label))
+//                            }}
+//            )
+            
             Button {
-                shouldShowLogOutOptions.toggle()
-            } label: {
-                Image(systemName: "gear")
-                    .font(.system(size: 24, weight: .bold))
-                    .foregroundColor(Color(.label))
-            }
+                 shouldShowLogOutOptions.toggle()
+             } label: {
+                 Image(systemName: "gear")
+                     .font(.system(size: 24, weight: .bold))
+                     .foregroundColor(Color(.label))
+             }
         }
         .padding()
         .actionSheet(isPresented: $shouldShowLogOutOptions) {
