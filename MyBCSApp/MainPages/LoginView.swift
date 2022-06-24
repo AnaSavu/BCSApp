@@ -11,10 +11,12 @@ import Firebase
 struct LoginView: View {
     let didCompleteLoginProcess: () -> ()
     
-    @State private var isLoginMode = false
+    @State private var isLoginMode = true
     @State private var email = ""
     @State private var password = ""
     @State private var hasLoggenIn = false
+    @State var loginStatusMessage = ""
+    @State private var displayError = false
     
     var body: some View {
         NavigationView {
@@ -59,11 +61,10 @@ struct LoginView: View {
                                 .padding(.vertical, 10)
                             Spacer()
                         }.background(Color.blue)
-                        
                     }
-                    
-                    Text(self.loginStatusMessage)
-                        .foregroundColor(.red)
+                    .alert(isPresented: self.$displayError) {
+                        Alert(title: Text(self.loginStatusMessage), primaryButton: .default(Text("OK")), secondaryButton: .cancel())
+                    }
                     
                     NavigationLink(destination: DashboardView(), isActive: $hasLoggenIn, label: {EmptyView()})
                     
@@ -92,6 +93,7 @@ struct LoginView: View {
             if let err = err {
                 print("Failed to login user", err)
                 self.loginStatusMessage = "Failed to login user: \(err)"
+                self.displayError.toggle()
                 return
             }
             print("Successfully logged in as user user: \(result?.user.uid ?? "")")
@@ -102,14 +104,13 @@ struct LoginView: View {
         }
     }
     
-    @State var loginStatusMessage = ""
-    
     private func createNewAccount() {
         FirebaseManager.shared.auth.createUser(withEmail: email, password: password) {
             result, err in
             if let err = err {
                 print("Failed to create user", err)
                 self.loginStatusMessage = "Failed to create user: \(err)"
+                self.displayError.toggle()
                 return
             }
             print("Successfully created user: \(result?.user.uid ?? "")")
