@@ -47,7 +47,7 @@ class HttpRequest {
     
     func getDataFromServer() -> String{
         print("Image is being sent to the server")
-        guard let url = URL(string: "http://192.168.0.124:8000/image") else {
+        guard let url = URL(string: "http://" + Utils().getServerUrl() + "/image") else {
             print("url was not done correctly")
             return "";
         }
