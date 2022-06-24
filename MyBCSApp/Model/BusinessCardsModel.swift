@@ -15,7 +15,6 @@ class BusinessCardsModel: ObservableObject {
     init() {
         guard let userId = FirebaseManager.shared.auth.currentUser?.uid else {
             return}
-        print(userId)
         self.uid = userId
         getBusinessCards()
     }
@@ -41,8 +40,6 @@ class BusinessCardsModel: ObservableObject {
                     let email = data["email"] as? String ?? ""
                     
                     if change.type == .added {
-                        
-                        
                         if userId == self.uid {
                             self.businessCards.append(
                                 .init(id: id, userId: userId, person: person, organization: organization, phoneNumber: phoneNumber, address: address, email: email))
@@ -50,8 +47,10 @@ class BusinessCardsModel: ObservableObject {
                     }
                     
                     if change.type == .removed {
-                        let removed_pos = self.businessCards.firstIndex(where: {$0.userId == self.uid})
-                        self.businessCards.remove(at: removed_pos!)
+                        if userId == self.uid {
+                            let removed_pos = self.businessCards.firstIndex(where: {$0.id == id})
+                            self.businessCards.remove(at: removed_pos!)
+                        }
                     }
                 })
             }
