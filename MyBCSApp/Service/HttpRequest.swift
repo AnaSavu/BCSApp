@@ -51,33 +51,41 @@ class HttpRequest {
             print("url was not done correctly")
             return "";
         }
-
+        
         let imageData = self.storageImage?.jpegData(compressionQuality: 1)
-  
+        
         var request = URLRequest(url: url)
         let semaphore = DispatchSemaphore.init(value: 0)
-
+        
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         let body: [String: AnyHashable] = [
             "base64str": imageData?.base64EncodedString()
         ]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body, options: .fragmentsAllowed)
-
+        
         var serverResponse: String = ""
-
-        let task = URLSession.shared.dataTask(with: request) {data, _, error in
+        
+        let task = URLSession.shared.dataTask(with: request) {data, response, error in
             guard let data = data, error == nil else {
                 return
             }
-            do {
-                let response: String = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as! String
-                serverResponse = response
-                defer {semaphore.signal()}
+            
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
+                print ("httpResponse.statusCode: \(httpResponse.statusCode)")
+                defer {
+                    semaphore.signal()
+                }
             }
-            catch {
-                print(error)
-            }
+            else {
+                do {
+                    let response: String = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as! String
+                    serverResponse = response
+                    defer {semaphore.signal()}
+                }
+                catch {
+                    print(error)
+                }}
         }
         task.resume()
         semaphore.wait()

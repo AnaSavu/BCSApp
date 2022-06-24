@@ -25,10 +25,12 @@ class ContactModel: ObservableObject {
                 var serverResponse = request.getDataFromServer()
                 print(serverResponse)
                 print("ended with request")
-                var serverDict = self.convertStringIntoDictionary(stringData: serverResponse)!
-                self.businessCardData = self.compareAndAddNecessaryFields(data: serverDict)
+                if serverResponse != "" {
+                    var serverDict = self.convertStringIntoDictionary(stringData: serverResponse)!
+                    self.businessCardData = self.compareAndAddNecessaryFields(data: serverDict)
+                    
+                }
                 group.leave()
-                
             }
         }
         group.notify(queue: .main) {
